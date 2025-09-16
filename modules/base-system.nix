@@ -38,8 +38,6 @@ with lib; {
         development = mkOption {
           type = types.listOf types.package;
           default = with pkgs; [
-            gcc
-            gnumake
             gh
             ripgrep
             fzf
@@ -53,7 +51,6 @@ with lib; {
           default = with pkgs; [
             cron
             killall
-            ookla-speedtest
             wireguard-tools
           ];
           description = "System utility packages";
@@ -116,4 +113,3 @@ with lib; {
     };
   };
 }
-
