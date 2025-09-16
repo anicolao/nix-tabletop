@@ -5,7 +5,16 @@
   boot.loader.generic-extlinux-compatible.enable = true;
   boot.kernelParams = ["console=ttyAMA0,115200"];
   boot.initrd.compressor = "gzip";
-  boot.initrd.includeAllModules = true;
+
+  # The RPi kernel is missing the dw-hdmi module by default.
+  # This patch forces it to be built as a module.
+  boot.kernelPatches = [{
+    name = "enable-dw-hdmi-module";
+    patch = null;
+    extraConfig = ''
+      CONFIG_DRM_DW_HDMI=m
+    '';
+  }];
 
   # Networking
   networking.hostName = "tabletop";
