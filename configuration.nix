@@ -5,6 +5,7 @@
   boot.loader.generic-extlinux-compatible.enable = true;
   boot.kernelParams = ["console=ttyAMA0,115200"];
   boot.initrd.compressor = "gzip";
+  boot.initrd.availableKernelModules = [ "dw-hdmi" ];
 
   # Networking
   networking.hostName = "tabletop";
