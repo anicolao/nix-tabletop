@@ -1,66 +1,65 @@
-# Main configuration file - now modularized
-# This file imports and configures the various system modules
-{
-  config,
-  lib,
-  pkgs,
-  ...
-}: {
-  # Import all modules
-  imports = [
-    ./modules/base-system.nix
-    ./modules/networking.nix
-    ./modules/hardware.nix
-    ./modules/users.nix
-  ];
-
-  # Enable all modules with default configuration
-  tabletop = {
-    baseSystem.enable = true;
-    networking.enable = true;
-    hardware.enable = true;
-    users.enable = true;
-  };
-
+# Refactored configuration.nix
+{ pkgs, ... }: {
+  # Bootloader settings for Raspberry Pi
+  boot.loader.grub.enable = false;
+  boot.loader.generic-extlinux-compatible.enable = true;
   boot.kernelParams = ["console=ttyAMA0,115200"];
   boot.initrd.compressor = "gzip";
 
-  # Kiosk mode setup
+  # Networking
+  networking.hostName = "tabletop";
+  networking.firewall.enable = true;
+  # Allow SSH, and web ports for kiosk
+  networking.firewall.allowedTCPPorts = [ 22 80 443 ];
+
+  # System timezone and locale
+  time.timeZone = "America/Toronto";
+  i18n.defaultLocale = "en_US.UTF-8";
+
+  # Essential services
+  services.openssh.enable = true;
+  services.ntp.enable = true;
+
+  # Kiosk mode setup with Cage and Chromium
   services.cage = {
     enable = true;
     user = "kiosk";
-    program = "${pkgs.chromium}/bin/chromium --kiosk --incognito https://www.google.com";
+    program =
+      "${pkgs.chromium}/bin/chromium "
+      + "--kiosk "
+      + "--incognito "
+      # Flags for Wayland and hardware acceleration
+      + "--enable-features=UseOzonePlatform,VaapiVideoDecoder "
+      + "--ozone-platform=wayland "
+      + "--enable-gpu-rasterization "
+      + "--enable-zero-copy "
+      + "--ignore-gpu-blocklist "
+      + "--use-gl=egl "
+      # Kiosk experience improvements
+      + "--disable-infobars "
+      + "--no-first-run "
+      + "https://www.google.com";
   };
-  systemd.services.cage = {
-    requires = ["time-sync.target"];
-    after = ["time-sync.target"];
-  };
+  systemd.services.cage.requires = ["time-sync.target"];
+  systemd.services.cage.after = ["time-sync.target"];
 
-  # OpenGL
+
+  # Hardware acceleration for Raspberry Pi 4
+  hardware.raspberry-pi."4".fkms-3d.enable = true;
   hardware.graphics.enable = true;
-  # Define the kiosk user
+
+  # Kiosk user
   users.users.kiosk = {
     isNormalUser = true;
-    extraGroups = ["video" "input" "wheel"];
+    extraGroups = [ "video" "input" ];
   };
 
-  # Minimal graphical environment & auto-login session
-  services.greetd = {
-    enable = false;
-    settings = {
-      initial_session = {
-        command = ''
-          ${pkgs.cage}/bin/cage -- \
-          ${pkgs.chromium}/bin/chromium \
-          --enable-features=UseOzonePlatform \
-          --ozone-platform=wayland \
-          --kiosk \
-          --disable-infobars \
-          --no-first-run \
-          "https://www.google.com"
-        '';
-        user = "kiosk";
-      };
-    };
-  };
+  # Allow unfree packages (for some drivers if needed)
+  nixpkgs.config.allowUnfree = true;
+
+  # Nix settings for flakes
+  nix.settings.experimental-features = "nix-command flakes";
+
+  # System state version
+  system.stateVersion = "24.11";
 }

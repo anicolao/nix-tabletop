@@ -2,8 +2,9 @@
   description = "Build Raspberry PI 4 image";
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixos-hardware.url = "github:NixOS/nixos-hardware";
   };
-  outputs = {nixpkgs, ...}: let
+  outputs = {nixpkgs, nixos-hardware, ...}: let
     hostname = "tabletop";
     # Use personal configuration if it exists, otherwise fall back to default
     userConfig =
@@ -14,6 +15,7 @@
     nixosConfigurations.rpi4 = nixpkgs.lib.nixosSystem {
       system = "aarch64-linux";
       modules = [
+        nixos-hardware.nixosModules.raspberry-pi-4
         "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
         ./sdimage.nix
         userConfig
