@@ -6,16 +6,6 @@
   boot.kernelParams = ["console=ttyAMA0,115200"];
   boot.initrd.compressor = "gzip";
 
-  # The RPi kernel is missing the dw-hdmi module by default.
-  # This patch forces it to be built as a module.
-  boot.kernelPatches = [{
-    name = "enable-dw-hdmi-module";
-    patch = null;
-    extraConfig = ''
-      CONFIG_DRM_DW_HDMI=m
-    '';
-  }];
-
   # Networking
   networking.hostName = "tabletop";
   networking.firewall.enable = true;
@@ -53,6 +43,16 @@
   systemd.services.cage.requires = ["time-sync.target"];
   systemd.services.cage.after = ["time-sync.target"];
 
+
+  # The RPi kernel is missing the dw-hdmi module by default.
+  # This patch forces it to be built as a module.
+  boot.kernelPatches = [{
+    name = "enable-dw-hdmi-module";
+    patch = null;
+    extraConfig = ''
+      DRM_DW_HDMI m
+    '';
+  }];
 
   # Hardware acceleration for Raspberry Pi 4
   hardware.raspberry-pi."4".fkms-3d.enable = true;
